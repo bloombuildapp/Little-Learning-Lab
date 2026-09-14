@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>bloom.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:      #0D0D0F;
+      --card:    #161619;
+      --card2:   #1E1E23;
+      --border:  #2A2A33;
+      --pink:    #F2A7C3;
+      --lpink:   rgba(242,167,195,0.15);
+      --lavender:#C5B4F0;
+      --mint:    #7EDED4;
+      --yellow:  #F5D76E;
+      --text:    #F0EAF8;
+      --muted:   #6B6480;
+      --dim:     #3A3448;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { overflow-x: hidden; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+
+    /* ── Background ── */
+    #bgLayer { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .bg-sym {
+      position: absolute; font-weight: 900; line-height: 1;
+      user-select: none; pointer-events: none; font-family: 'Nunito', sans-serif;
+    }
+    @keyframes bgfloat {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      33%      { transform: translateY(-10px) rotate(6deg); }
+      66%      { transform: translateY(5px) rotate(-4deg); }
+    }
+    .header, .section { position: relative; z-index: 1; }
+
+    /* ── Header ── */
+    .header { text-align: center; padding: 48px 24px 24px; }
+    .logo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 54px; color: var(--text); letter-spacing: -1px; line-height: 1; }
+    .logo-heart { color: var(--pink); font-style: normal; font-size: 28px; vertical-align: super; }
+    .tagline { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+
+    /* ── Pet ── */
+    .pet-wrap { margin: 18px auto 0; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .pet { font-size: 38px; transition: transform 0.15s; display: block; }
+    .pet:hover { transform: scale(1.15) rotate(-5deg); }
+    .pet-xp { width: 80px; height: 5px; background: var(--dim); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+    .pet-xp-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--mint), var(--lavender)); transition: width 0.5s cubic-bezier(.34,1.56,.64,1); }
+    .pet-level { font-size: 10px; font-weight: 900; color: var(--lavender); }
+    .pet-label { font-size: 9px; font-weight: 800; color: var(--muted); letter-spacing: 1px; }
+
+    /* ── Theme ── */
+    .theme-strip { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
+    .theme-dot { width: 16px; height: 16px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.12s, border-color 0.12s; }
+    .theme-dot:hover  { transform: scale(1.2); }
+    .theme-dot.active { border-color: white; transform: scale(1.1); }
+
+    .today-pill { margin-top: 16px; display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--border); border-radius: 99px; padding: 7px 18px; font-size: 12px; font-weight: 800; color: var(--text); }
+    .tilde { color: var(--pink); }
+
+    /* ── Sections ── */
+    .section { padding: 0 14px; margin-top: 18px; }
+    .section-label { font-size: 9px; font-weight: 900; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; padding: 0 2px; }
+
+    /* ── Sticker shelf ── */
+    .sticker-shelf { background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; padding: 12px 0 14px; }
+    .sticker-tabs { display: flex; gap: 5px; padding: 0 12px 10px; overflow-x: auto; scrollbar-width: none; }
+    .sticker-tabs::-webkit-scrollbar { display: none; }
+    .s-tab {
+      flex-shrink: 0; padding: 4px 12px; border-radius: 99px;
+      border: 1.5px solid var(--border); background: transparent;
+      font-size: 10px; font-weight: 800; color: var(--muted);
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      transition: all 0.12s; letter-spacing: 0.5px;
+    }
+    .s-tab.active { background: var(--lpink); border-color: var(--pink); color: var(--pink); }
+
+    .sticker-row { display: flex; gap: 5px; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+    .sticker-row::-webkit-scrollbar { display: none; }
+
+    /* Pastel sticker chips */
+    .stk-chip {
+      flex-shrink: 0;
+      min-width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; line-height: 1;
+      cursor: grab; user-select: none; touch-action: none;
+      border: 1.5px solid transparent;
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+      padding: 0 6px;
+    }
+    .stk-chip:hover  { transform: scale(1.18); box-shadow: 0 2px 12px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.15); }
+    .stk-chip:active { transform: scale(1.3); }
+    .stk-chip.dragging { opacity: 0.35; transform: scale(0.85); }
+
+    /* Drag ghost */
+    #dragGhost {
+      position: fixed; pointer-events: none; z-index: 9999;
+      font-size: 36px; font-weight: 900; font-family: 'Nunito', sans-serif;
+      transform: translate(-50%,-50%); display: none;
+      filter: drop-shadow(0 4px 14px rgba(242,167,195,0.5));
+      transition: transform 0.04s;
+    }
+    #dragGhost.over-zone { transform: translate(-50%,-50%) scale(1.35); }
+
+    /* ── Idea Card ── */
+    .idea-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 22px; overflow: hidden; position: relative; }
+
+    /* Sticker canvas — full card overlay, pointer-events none so text is still editable */
+    #stickerCanvas {
+      position: absolute; inset: 0; z-index: 10;
+      pointer-events: none;
+      border-radius: 22px; overflow: hidden;
+    }
+
+    /* Individual placed stickers */
+    .placed-stk {
+      position: absolute;
+      pointer-events: auto;
+      cursor: grab; user-select: none; touch-action: none;
+      font-size: 28px; font-weight: 900; font-family: 'Nunito', sans-serif;
+      transform: translate(-50%, -50%);
+      transition: filter 0.15s;
+      line-height: 1;
+    }
+    .placed-stk:hover { filter: drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
+    .placed-stk.dragging-placed { opacity: 0.6; cursor: grabbing; }
+    .remove-hint { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 800; color: white; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .placed-stk:hover .remove-hint { opacity: 1; }
+
+    /* Drop zone highlight on card */
+    .idea-card.drag-over { outline: 2px dashed var(--pink); outline-offset: -2px; }
+
+    /* Card top — mini sticker tray */
+    .idea-card-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1.5px solid var(--border); flex-wrap: wrap; gap: 6px; }
+    .idea-date { font-size: 13px; font-weight: 900; color: var(--text); }
+    .card-hint { font-size: 10px; color: var(--muted); font-weight: 700; font-style: italic; }
+
+    /* Split */
+    .idea-split { display: flex; min-height: 280px; }
+    .upload-col { border-right: 1.5px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; width: 116px; flex-shrink: 0; position: relative; z-index: 15; }
+    .upload-box {
+      flex: 1; min-height: 110px; border: 1.5px dashed var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; position: relative; overflow: hidden; transition: border-color 0.15s, background 0.15s;
+    }
+    .upload-box:hover { border-color: var(--pink); background: var(--lpink); }
+    .upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-box-icon { font-size: 22px; }
+    .upload-box-text { font-size: 9px; font-weight: 800; color: var(--muted); text-align: center; letter-spacing: 0.5px; }
+    .upload-box.has-image { border-style: solid; cursor: default; }
+    .upload-box.has-image img { display: block !important; }
+    .upload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s; pointer-events: none; }
+    .upload-box.has-image .upload-overlay { pointer-events: auto; }
+    .upload-box.has-image:hover .upload-overlay { opacity: 1; }
+    .upload-overlay-text { font-size: 10px; font-weight: 800; color: white; }
+    .add-more-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px; border-radius: 10px; border: 1.5px dashed var(--border); background: transparent; font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 800; color: var(--muted); cursor: pointer; transition: all 0.12s; }
+    .add-more-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    .text-col { padding: 14px; display: flex; flex-direction: column; gap: 0; flex: 1; overflow: hidden; position: relative; z-index: 15; }
+    .prompt-block { display: flex; flex-direction: column; flex: 1; }
+    .prompt-block + .prompt-block { border-top: 1.5px solid var(--border); margin-top: 10px; padding-top: 10px; }
+    .prompt-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .idea-prompt { font-size: 9px; font-weight: 900; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .mic-btn { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .mic-btn:hover { border-color: var(--pink); background: var(--lpink); }
+    .mic-btn.recording { border-color: #ff4444; background: rgba(255,68,68,0.15); animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,68,68,0.4);} 50%{box-shadow:0 0 0 6px rgba(255,68,68,0);} }
+    .idea-textarea { flex: 1; background: transparent; border: none; outline: none; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); resize: none; line-height: 1.65; width: 100%; min-height: 80px; }
+    .idea-textarea::placeholder { color: var(--muted); font-size: 12px; }
+
+
+    .idea-bottom { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1.5px solid var(--border); gap: 8px; position: relative; z-index: 15; }
+    .link-input { flex: 1; background: var(--card2); border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 12px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 600; color: var(--text); outline: none; transition: border-color 0.15s; }
+    .link-input:focus { border-color: var(--lavender); }
+    .link-input::placeholder { color: var(--muted); }
+    .btn-save { padding: 8px 14px; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 900; color: var(--muted); cursor: pointer; transition: all 0.12s; }
+    .btn-save:hover { border-color: var(--mint); color: var(--mint); }
+    .btn-share { padding: 8px 18px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--lavender), var(--pink)); font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 900; color: #0D0D0F; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+    .btn-share:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* ── Calendars ── */
+    .cals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-cal { background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; padding: 14px 10px; }
+    .mc-title { font-size: 11px; font-weight: 900; color: var(--text); margin-bottom: 10px; text-align: center; }
+    .mc-grid { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; gap: 1px; }
+    .mc-dname { font-size: 7px; font-weight: 900; color: var(--muted); padding: 2px 0; }
+    .mc-day { font-size: 9px; font-weight: 700; color: var(--muted); padding: 4px 1px; border-radius: 5px; cursor: pointer; line-height: 1.3; }
+    .mc-day.cur { color: var(--text); }
+    .mc-day.cur:hover { background: var(--dim); }
+    .mc-day.today { background: linear-gradient(135deg, var(--lavender), var(--pink)); color: #0D0D0F; font-weight: 900; }
+    .mc-day.entry::after { content:''; display:block; width:3px; height:3px; border-radius:50%; background:var(--pink); margin:1px auto 0; }
+    .mc-day.today.entry::after { background: white; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: var(--bg); padding: 10px 22px; border-radius: 99px; font-size: 12px; font-weight: 800; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); z-index: 200; pointer-events: none; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div id="bgLayer"></div>
+<div id="dragGhost"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">bloom<span class="logo-heart">♥</span></div>
+  <div class="tagline">grow your ideas</div>
+  <div class="pet-wrap" onclick="petTap()">
+    <span class="pet" id="pet">🌱</span>
+    <div class="pet-xp"><div class="pet-xp-fill" id="petXp" style="width:0%"></div></div>
+    <div class="pet-level" id="petLevel">seedling</div>
+    <div class="pet-label">YOUR GARDEN · TAP ME</div>
+  </div>
+  <div class="theme-strip">
+    <div class="theme-dot active" style="background:#F2A7C3" onclick="setTheme('#F2A7C3')"></div>
+    <div class="theme-dot" style="background:#C5B4F0" onclick="setTheme('#C5B4F0')"></div>
+    <div class="theme-dot" style="background:#7EDED4" onclick="setTheme('#7EDED4')"></div>
+    <div class="theme-dot" style="background:#F5D76E" onclick="setTheme('#F5D76E')"></div>
+    <div class="theme-dot" style="background:#F0EAF8" onclick="setTheme('#F0EAF8')"></div>
+  </div>
+  <div class="today-pill">
+    <span class="tilde">~</span><span id="todayLabel"></span><span class="tilde">~</span>
+  </div>
+</div>
+
+<!-- Sticker shelf -->
+<div class="section">
+  <div class="section-label">stickers &nbsp;·&nbsp; drag anywhere onto your entry</div>
+  <div class="sticker-shelf">
+    <div class="sticker-tabs" id="sTabs"></div>
+    <div class="sticker-row" id="sRow"></div>
+  </div>
+</div>
+
+<!-- Idea Card (doodle pad) -->
+<div class="section" style="margin-top:14px">
+  <div class="section-label">today's idea entry &nbsp;·&nbsp; drop stickers anywhere inside</div>
+  <div class="idea-card" id="ideaCard">
+
+    <!-- Floating sticker canvas -->
+    <div id="stickerCanvas"></div>
+
+    <div class="idea-card-top">
+      <div class="idea-date" id="cardDate"></div>
+      <div class="card-hint" id="cardHint">drag stickers anywhere ✦</div>
+    </div>
+
+    <div class="idea-split">
+      <div class="upload-col">
+        <div class="upload-box" id="uploadBox">
+          <input type="file" accept="image/*" id="photoInput" onchange="handlePhoto(event)"
+            style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:20;" />
+          <img id="photoImg" src="" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:13px;z-index:15;" />
+          <div class="upload-overlay" style="z-index:25" onclick="event.stopPropagation();removePhoto()"><span class="upload-overlay-text">remove</span></div>
+          <div id="uploadPlaceholder">
+            <div class="upload-box-icon">📸</div>
+            <div class="upload-box-text">ADD PHOTO<br/>SCREENSHOT</div>
+          </div>
+        </div>
+        <button class="add-more-btn">+ link / file</button>
+      </div>
+
+      <div class="text-col">
+        <div class="prompt-block">
+          <div class="prompt-header">
+            <div class="idea-prompt">what's the idea?</div>
+            <button class="mic-btn" id="mic1" onclick="toggleMic('ideaText1','mic1')">🎙</button>
+          </div>
+          <textarea class="idea-textarea" id="ideaText1" placeholder="drop it here... this font is cool, maybe use for ig reel cover ✦" rows="5"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="idea-bottom">
+      <input class="link-input" id="linkInput" placeholder="🔗 paste a link or file..." />
+      <button class="btn-save" onclick="saveEntry()">save</button>
+      <button class="btn-share">share</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendars -->
+<div class="section" style="margin-top:14px">
+  <div class="section-label">your garden calendar</div>
+  <div class="cals">
+    <div class="mini-cal" id="cal0"></div>
+    <div class="mini-cal" id="cal1"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════
+   PASTEL STICKER SETS
+══════════════════════════ */
+const STICKER_SETS = {
+  shapes: [
+    {s:'♥',c:'#F2A7C3'},{s:'♡',c:'#FFAEC0'},{s:'✦',c:'#F5D76E'},{s:'✧',c:'#FFE8A3'},
+    {s:'✶',c:'#7EDED4'},{s:'✷',c:'#A8F0E8'},{s:'✸',c:'#C5B4F0'},{s:'✹',c:'#D4C6FF'},
+    {s:'❋',c:'#F7C59F'},{s:'✿',c:'#FFB3C6'},{s:'◆',c:'#C5B4F0'},{s:'▲',c:'#7EDED4'},
+    {s:'●',c:'#F2A7C3'},{s:'★',c:'#F5D76E'},{s:'☆',c:'#E8E0FF'},{s:'✤',c:'#A8F0E8'},
+  ],
+  mood: [
+    {s:'☺',c:'#F5D76E'},{s:'☻',c:'#F7C59F'},{s:'◕',c:'#C5B4F0'},{s:'◡',c:'#7EDED4'},
+    {s:'≧',c:'#F2A7C3'},{s:'ʘ',c:'#FFE8A3'},{s:'⊙',c:'#A8F0E8'},{s:'⌣',c:'#D4C6FF'},
+    {s:'✌',c:'#7EDED4'},{s:'♪',c:'#F2A7C3'},{s:'zzz',c:'#C5B4F0',small:true},{s:'!!',c:'#F5D76E',small:true},
+  ],
+  nature: [
+    {s:'🌸',c:null,emoji:true},{s:'🌿',c:null,emoji:true},{s:'🌙',c:null,emoji:true},
+    {s:'☁',c:'#D4E8FF'},{s:'❄',c:'#BDE8FF'},{s:'🌊',c:null,emoji:true},
+    {s:'🦋',c:null,emoji:true},{s:'✾',c:'#FFB3C6'},{s:'❀',c:'#FFD6E0'},
+    {s:'❁',c:'#F5D76E'},{s:'⚘',c:'#C8F0C0'},{s:'☘',c:'#A8DFA0'},
+  ],
+  feelings: [
+    {s:'✨',c:'#F5D76E',emoji:true},{s:'💭',c:null,emoji:true},{s:'🫧',c:null,emoji:true},
+    {s:'ʕ•ᴥ•ʔ',c:'#F7C59F',small:true},{s:'(◕‿◕)',c:'#C5B4F0',small:true},
+    {s:'≧◡≦',c:'#F2A7C3',small:true},{s:'(˘▽˘)',c:'#7EDED4',small:true},
+    {s:'⊂(◉‿◉)',c:'#FFE8A3',small:true},{s:'(づ ᴗ _ᴗ)',c:'#D4C6FF',small:true},
+  ],
+  magic: [
+    {s:'🎀',c:null,emoji:true},{s:'💎',c:null,emoji:true},{s:'🔮',c:null,emoji:true},
+    {s:'🪄',c:null,emoji:true},{s:'⭐',c:'#F5D76E'},{s:'彡',c:'#F2A7C3'},
+    {s:'〜',c:'#7EDED4'},{s:'ミ★',c:'#F5D76E',small:true},{s:'꒰',c:'#C5B4F0'},
+    {s:'✎',c:'#F2A7C3'},{s:'♬',c:'#7EDED4'},{s:'⟡',c:'#C5B4F0'},
+  ],
+};
+
+const MONTHS  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WEEKDAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DNAMES  = ['S','M','T','W','T','F','S'];
+
+const today    = new Date();
+const todayKey = fmtKey(today.getFullYear(), today.getMonth(), today.getDate());
+let data       = JSON.parse(localStorage.getItem('bloom_v5') || '{}');
+let daysSaved  = JSON.parse(localStorage.getItem('bloom_days') || '[]');
+let petLevel   = daysSaved.length;
+let currentTab = 'shapes';
+let currentDragSticker = null; // {s, c, small}
+
+function fmtKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function saveData(){ localStorage.setItem('bloom_v5', JSON.stringify(data)); }
+
+/* ── Date labels ── */
+document.getElementById('todayLabel').textContent =
+  `${WEEKDAY[today.getDay()]}, ${MONTHS[today.getMonth()]} ${today.getDate()}`;
+document.getElementById('cardDate').textContent =
+  `${MONTHS[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`;
+
+/* ══════════════════════════
+   BACKGROUND
+══════════════════════════ */
+function buildBg(){
+  const layer=document.getElementById('bgLayer');
+  const syms=['♥','♡','✦','✧','✶','✷','✸','❋','✿','◆','▲','●','★','☆','✤','❀','❁'];
+  const cols=['#F2A7C3','#C5B4F0','#7EDED4','#F5D76E','#F7C59F','#F0EAF8'];
+  for(let i=0;i<70;i++){
+    const el=document.createElement('div');
+    el.className='bg-sym'; el.textContent=syms[Math.floor(Math.random()*syms.length)];
+    const size=9+Math.random()*18, opacity=0.03+Math.random()*0.08, delay=Math.random()*8, dur=5+Math.random()*7;
+    el.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;font-size:${size}px;color:${cols[Math.floor(Math.random()*cols.length)]};opacity:${opacity};animation:bgfloat ${dur}s ${delay}s ease-in-out infinite;`;
+    layer.appendChild(el);
+  }
+}
+
+/* ══════════════════════════
+   PET
+══════════════════════════ */
+const petStages=[
+  {min:0,emoji:'🌱',name:'seedling'},{min:2,emoji:'🌿',name:'sprout'},
+  {min:5,emoji:'🪴',name:'little plant'},{min:10,emoji:'🌸',name:'flowering'},
+  {min:18,emoji:'🌺',name:'blooming'},{min:30,emoji:'🌳',name:'full garden'},
+];
+function getStage(n){ return [...petStages].reverse().find(s=>n>=s.min)||petStages[0]; }
+function updatePet(){
+  const stage=getStage(petLevel), next=petStages[petStages.indexOf(stage)+1];
+  document.getElementById('pet').textContent=stage.emoji;
+  document.getElementById('petLevel').textContent=stage.name;
+  const pct=next?Math.round(((petLevel-stage.min)/(next.min-stage.min))*100):100;
+  document.getElementById('petXp').style.width=pct+'%';
+}
+function petTap(){
+  const el=document.getElementById('pet');
+  el.style.transform='scale(1.4) rotate(-10deg)';
+  setTimeout(()=>el.style.transform='',200);
+  toast(petLevel===0?'save your first idea to grow! 🌱':'your garden loves you 🌸');
+}
+updatePet();
+
+/* ══════════════════════════
+   THEME
+══════════════════════════ */
+function setTheme(primary){
+  document.documentElement.style.setProperty('--pink',primary);
+  document.documentElement.style.setProperty('--lpink',primary+'26');
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+/* ══════════════════════════
+   STICKER SHELF
+══════════════════════════ */
+function renderTabs(){
+  const el=document.getElementById('sTabs'); el.innerHTML='';
+  Object.keys(STICKER_SETS).forEach(tab=>{
+    const b=document.createElement('button');
+    b.className='s-tab'+(tab===currentTab?' active':'');
+    b.textContent=tab;
+    b.onclick=()=>{ currentTab=tab; renderTabs(); renderRow(); };
+    el.appendChild(b);
+  });
+}
+function renderRow(){
+  const el=document.getElementById('sRow'); el.innerHTML='';
+  STICKER_SETS[currentTab].forEach(stk=>{
+    const d=document.createElement('div');
+    d.className='stk-chip';
+    d.textContent=stk.s;
+    d.style.background = stk.c ? stk.c+'22' : 'rgba(255,255,255,0.06)';
+    d.style.color       = stk.c || '#F0EAF8';
+    if(stk.small) d.style.fontSize='11px';
+    if(stk.emoji) { d.style.fontSize='22px'; d.style.filter='saturate(0.75) brightness(1.1)'; }
+    d.setAttribute('draggable','true');
+    d.addEventListener('dragstart', e=>{ startDrag(stk,d,e); });
+    d.addEventListener('dragend',   ()=>{ d.classList.remove('dragging'); hideGhost(); });
+    d.addEventListener('touchstart', e=>onTouchStart(e,stk,d),{passive:false});
+    d.addEventListener('click', ()=>placeSticker(stk, 20+Math.random()*60, 20+Math.random()*60));
+    el.appendChild(d);
+  });
+}
+
+/* ══════════════════════════
+   DRAG & DROP ONTO CARD
+══════════════════════════ */
+const ghost     = document.getElementById('dragGhost');
+const ideaCard  = document.getElementById('ideaCard');
+const canvas    = document.getElementById('stickerCanvas');
+
+function startDrag(stk, el, e){
+  currentDragSticker = stk;
+  el.classList.add('dragging');
+  if(e){ e.dataTransfer.setData('text/plain', stk.s); }
+  showGhost(stk);
+}
+function showGhost(stk){
+  ghost.textContent = stk.s;
+  ghost.style.color  = stk.c || '#F0EAF8';
+  ghost.style.fontSize = stk.small ? '18px' : stk.emoji ? '30px' : '34px';
+  ghost.style.display='block';
+}
+function hideGhost(){ ghost.style.display='none'; currentDragSticker=null; }
+function moveGhost(x,y){ ghost.style.left=x+'px'; ghost.style.top=y+'px'; }
+function isOverCard(x,y){ const r=ideaCard.getBoundingClientRect(); return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom; }
+function cardRelPos(x,y){ const r=ideaCard.getBoundingClientRect(); return {px:((x-r.left)/r.width)*100, py:((y-r.top)/r.height)*100}; }
+
+// Desktop drag
+document.addEventListener('dragover', e=>{ e.preventDefault(); moveGhost(e.clientX,e.clientY); ideaCard.classList.toggle('drag-over',isOverCard(e.clientX,e.clientY)); ghost.classList.toggle('over-zone',isOverCard(e.clientX,e.clientY)); });
+document.addEventListener('drop', e=>{
+  e.preventDefault();
+  const stk = currentDragSticker; // save BEFORE hideGhost nulls it
+  const overCard = isOverCard(e.clientX, e.clientY);
+  const pos = overCard ? cardRelPos(e.clientX, e.clientY) : null;
+  ideaCard.classList.remove('drag-over'); hideGhost();
+  if(stk && overCard){ placeSticker(stk, pos.px, pos.py); }
+});
+document.addEventListener('dragend',()=>{ ideaCard.classList.remove('drag-over'); hideGhost(); });
+
+// Touch drag from shelf
+let touchStk=null, touchEl=null;
+function onTouchStart(e,stk,el){
+  e.preventDefault();
+  touchStk=stk; touchEl=el;
+  el.classList.add('dragging');
+  const t=e.touches[0]; showGhost(stk); moveGhost(t.clientX,t.clientY);
+  function onMove(ev){ ev.preventDefault(); const t2=ev.touches[0]; moveGhost(t2.clientX,t2.clientY); ideaCard.classList.toggle('drag-over',isOverCard(t2.clientX,t2.clientY)); ghost.classList.toggle('over-zone',isOverCard(t2.clientX,t2.clientY)); }
+  function onEnd(ev){
+    const t2=ev.changedTouches[0];
+    el.classList.remove('dragging'); ideaCard.classList.remove('drag-over'); hideGhost();
+    if(isOverCard(t2.clientX,t2.clientY)){ const{px,py}=cardRelPos(t2.clientX,t2.clientY); placeSticker(touchStk,px,py); }
+    document.removeEventListener('touchmove',onMove); document.removeEventListener('touchend',onEnd);
+  }
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('touchend',onEnd);
+}
+
+/* ══════════════════════════
+   PLACE & RENDER STICKERS
+══════════════════════════ */
+function placeSticker(stk, px, py){
+  if(!data[todayKey]) data[todayKey]={};
+  if(!data[todayKey].canvas) data[todayKey].canvas=[];
+  if(data[todayKey].canvas.length>=20){ toast('canvas full! remove some stickers'); return; }
+  const entry={s:stk.s, c:stk.c||null, px, py, small:stk.small||false, emoji:stk.emoji||false};
+  data[todayKey].canvas.push(entry);
+  saveData(); renderCanvas();
+  renderCals();
+}
+
+function renderCanvas(){
+  canvas.innerHTML='';
+  const entries=(data[todayKey]?.canvas)||[];
+  entries.forEach((e,i)=>{
+    const el=document.createElement('div');
+    el.className='placed-stk';
+    el.textContent=e.s;
+    el.style.left=e.px+'%'; el.style.top=e.py+'%';
+    el.style.color=e.c||'#F0EAF8';
+    el.style.fontSize=e.small?'16px':e.emoji?'26px':'28px';
+    // remove on double-click/tap
+    let tapTimer=null;
+    el.addEventListener('click',()=>{
+      if(tapTimer){ clearTimeout(tapTimer); tapTimer=null; removeCanvasSticker(i); return; }
+      tapTimer=setTimeout(()=>{ tapTimer=null; },300);
+    });
+    // drag to reposition
+    setupPlacedDrag(el, i);
+    canvas.appendChild(el);
+  });
+}
+
+function removeCanvasSticker(i){
+  data[todayKey].canvas.splice(i,1);
+  saveData(); renderCanvas(); renderCals();
+  toast('sticker removed');
+}
+
+/* drag placed stickers to reposition */
+function setupPlacedDrag(el, idx){
+  let dragging=false, startX, startY;
+  function move(x,y){
+    const r=ideaCard.getBoundingClientRect();
+    const px=Math.max(0,Math.min(100,((x-r.left)/r.width)*100));
+    const py=Math.max(0,Math.min(100,((y-r.top)/r.height)*100));
+    el.style.left=px+'%'; el.style.top=py+'%';
+    if(data[todayKey]?.canvas?.[idx]){
+      data[todayKey].canvas[idx].px=px;
+      data[todayKey].canvas[idx].py=py;
+    }
+  }
+  // Mouse
+  el.addEventListener('mousedown', e=>{
+    e.stopPropagation(); dragging=true; el.classList.add('dragging-placed');
+    startX=e.clientX; startY=e.clientY;
+    const mm=ev=>{ if(!dragging)return; move(ev.clientX,ev.clientY); };
+    const mu=()=>{ dragging=false; el.classList.remove('dragging-placed'); saveData(); document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); };
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+  });
+  // Touch
+  el.addEventListener('touchstart', e=>{
+    e.stopPropagation(); e.preventDefault();
+    el.classList.add('dragging-placed');
+    const tm=ev=>{ ev.preventDefault(); const t=ev.touches[0]; move(t.clientX,t.clientY); };
+    const te=()=>{ el.classList.remove('dragging-placed'); saveData(); document.removeEventListener('touchmove',tm); document.removeEventListener('touchend',te); };
+    document.addEventListener('touchmove',tm,{passive:false}); document.addEventListener('touchend',te);
+  },{passive:false});
+}
+
+
+/* ══════════════════════════
+   PHOTO
+══════════════════════════ */
+function handlePhoto(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=document.getElementById('photoImg');
+    img.src=ev.target.result; img.style.display='block';
+    document.getElementById('uploadPlaceholder').style.display='none';
+    document.getElementById('photoInput').style.zIndex='0'; // hide input behind image
+    document.getElementById('uploadBox').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(){
+  document.getElementById('photoImg').src=''; document.getElementById('photoImg').style.display='none';
+  document.getElementById('uploadPlaceholder').style.display='';
+  document.getElementById('photoInput').style.zIndex='20';
+  document.getElementById('photoInput').value='';
+  document.getElementById('uploadBox').classList.remove('has-image');
+}
+
+/* ══════════════════════════
+   AUDIO
+══════════════════════════ */
+let activeRec=null, activeTA=null;
+function toggleMic(taId,btnId){
+  const btn=document.getElementById(btnId);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('try Chrome for voice input'); return; }
+  if(activeRec&&activeTA===taId){ activeRec.stop(); return; }
+  if(activeRec) activeRec.stop();
+  const ta=document.getElementById(taId);
+  const rec=new SR(); rec.continuous=true; rec.interimResults=true; rec.lang='en-US';
+  let saved=ta.value;
+  rec.onstart=()=>{ activeRec=rec; activeTA=taId; btn.classList.add('recording'); toast('listening... 🎙'); };
+  rec.onresult=e=>{
+    let fin='',int='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) fin+=e.results[i][0].transcript;
+      else int+=e.results[i][0].transcript;
+    }
+    if(fin) saved+=(saved?' ':'')+fin;
+    ta.value=saved+(int?' '+int:'');
+  };
+  rec.onend=()=>{ ta.value=saved; btn.classList.remove('recording'); activeRec=null; activeTA=null; toast('transcription done ✦'); };
+  rec.onerror=e=>{ btn.classList.remove('recording'); activeRec=null; activeTA=null; toast(e.error==='not-allowed'?'mic permission denied':'voice error: '+e.error); };
+  rec.start();
+}
+
+/* ══════════════════════════
+   SAVE
+══════════════════════════ */
+function saveEntry(){
+  const t1=document.getElementById('ideaText1').value.trim();
+  const link=document.getElementById('linkInput').value.trim();
+  if(!t1&&!link&&!data[todayKey]?.canvas?.length){ toast('add something first ✦'); return; }
+  const isNewDay=!daysSaved.includes(todayKey);
+  if(!data[todayKey]) data[todayKey]={};
+  data[todayKey].text1=t1; data[todayKey].link=link;
+  data[todayKey].saved=true;
+  saveData();
+  if(isNewDay){
+    daysSaved.push(todayKey); localStorage.setItem('bloom_days',JSON.stringify(daysSaved));
+    petLevel=daysSaved.length; updatePet();
+    const pet=document.getElementById('pet'); pet.style.transform='scale(1.5)';
+    setTimeout(()=>pet.style.transform='',300);
+    const msgs=['day saved 🌱 your garden grew!','entry planted ✨ keep blooming!','your tree is growing 🌸','another day, another bloom ✦'];
+    toast(msgs[Math.floor(Math.random()*msgs.length)]);
+  } else { toast('entry updated ✦'); }
+  renderCals();
+}
+
+/* ══════════════════════════
+   CALENDARS
+══════════════════════════ */
+function renderCals(){
+  [0,1].forEach(i=>{ const d=new Date(today.getFullYear(),today.getMonth()+i,1); renderMiniCal(document.getElementById('cal'+i),d.getFullYear(),d.getMonth()); });
+}
+function renderMiniCal(el,y,m){
+  const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), prev=new Date(y,m,0).getDate();
+  el.innerHTML=`<div class="mc-title">${MONTHS[m].slice(0,3)} ${y}</div><div class="mc-grid"></div>`;
+  const g=el.querySelector('.mc-grid');
+  DNAMES.forEach(d=>{ const n=document.createElement('div'); n.className='mc-dname'; n.textContent=d; g.appendChild(n); });
+  for(let i=first-1;i>=0;i--){ const n=document.createElement('div'); n.className='mc-day'; n.textContent=prev-i; g.appendChild(n); }
+  for(let d=1;d<=days;d++){
+    const n=document.createElement('div'), k=fmtKey(y,m,d);
+    const isT=new Date(y,m,d).toDateString()===today.toDateString();
+    const hasE=data[k]&&(data[k].text1||data[k].canvas?.length);
+    n.className='mc-day cur'+(isT?' today':'')+(hasE?' entry':''); n.textContent=d; g.appendChild(n);
+  }
+  const rem=(first+days)%7===0?0:7-(first+days)%7;
+  for(let d=1;d<=rem;d++){const n=document.createElement('div'); n.className='mc-day'; n.textContent=d; g.appendChild(n);}
+}
+
+/* ══════════════════════════
+   TOAST
+══════════════════════════ */
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2400); }
+
+/* ══════════════════════════
+   INIT
+══════════════════════════ */
+function loadToday(){
+  const e=data[todayKey]||{};
+  if(e.text1) document.getElementById('ideaText1').value=e.text1;
+  if(e.link)  document.getElementById('linkInput').value=e.link;
+  renderCanvas();
+}
+[1,3,5,8,11].forEach(offset=>{
+  const d=new Date(today); d.setDate(d.getDate()-offset);
+  const k=fmtKey(d.getFullYear(),d.getMonth(),d.getDate());
+  if(!data[k]) data[k]={text1:'✦',canvas:[{s:'✦',c:'#F5D76E',px:80,py:20,small:false}]};
+});
+saveData();
+
+buildBg(); renderTabs(); renderRow(); loadToday(); renderCals();
+</script>
+</body>
+</html>
